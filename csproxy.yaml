@@ -1,0 +1,15 @@
+---
+listeners:
+  carbon:
+#     address: 127.0.0.1
+    port: 2004
+#   http:
+#     address: 127.0.0.1
+#     port: 9080
+outputs:
+  statsd:
+    address: localhost
+    port: 8125
+  carbon:
+    address: localhost
+    port: 2004
