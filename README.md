@@ -11,7 +11,7 @@ without writing a collectd plugin that transformed metric names.
 csproxy accepts metrics on the carbon protocol in the format:
 
 ```
-# path ts val
+# pathval ts
 collectd.host_example_net.interface-en2.if_octets.tx 0.000000 1463321399
 ```
 
