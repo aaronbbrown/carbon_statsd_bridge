@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
 )
 
-func statsdWriter(address string, port int, done chan bool, metrics chan *carbonMetric) {
-	service := fmt.Sprintf("%s:%d", address, port)
+func statsdWriter(address string, port int, done chan bool, metrics chan *Metric, transforms []transform) {
+	service := net.JoinHostPort(address, strconv.Itoa(port))
 
 	log.Printf("Sending to statsd at %s", service)
 	udpAddr, err := net.ResolveUDPAddr("udp4", service)
@@ -17,16 +18,20 @@ func statsdWriter(address string, port int, done chan bool, metrics chan *carbon
 
 	for {
 		metric := <-metrics
-		log.Printf("Sending metric: %s", metric.Format("statsd"))
-		conn, err := net.DialUDP("udp4", nil, udpAddr)
-		if err != nil {
-			log.Printf("Error connecting to %s: %s", service, err.Error())
-			continue
-		}
+		emitMetrics := metric.ApplyTransforms(transforms)
 
-		defer conn.Close()
-		msg := fmt.Sprintf("%s\n", metric.Format("statsd"))
-		conn.Write([]byte(msg))
+		for _, m := range emitMetrics {
+			log.Printf("Sending metrics to statsd: %s", m.Format("statsd"))
+			conn, err := net.DialUDP("udp4", nil, udpAddr)
+			if err != nil {
+				log.Printf("Error connecting to %s: %s", service, err.Error())
+				continue
+			}
+
+			defer conn.Close()
+			msg := fmt.Sprintf("%s\n", m.Format("statsd"))
+			conn.Write([]byte(msg))
+		}
 	}
 	done <- true
 }

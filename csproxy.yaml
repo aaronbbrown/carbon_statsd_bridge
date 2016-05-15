@@ -1,15 +1,22 @@
 ---
-listeners:
-  carbon:
+# listeners:
+#   carbon:
 #     address: 127.0.0.1
-    port: 2004
+#     port: 2004
 #   http:
 #     address: 127.0.0.1
 #     port: 9080
-outputs:
+writers:
   statsd:
     address: localhost
     port: 8125
   carbon:
-    address: localhost
-    port: 2004
+    address: tigh
+    port: 2003
+transforms:
+  statsd:
+    - match: ^collectd\.(.*?)\.(.*)
+      replace: collectd.$2
+    - match: ^foo
+      replace: bar
+

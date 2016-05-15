@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/spf13/viper"
 	"log"
 	"os"
@@ -34,22 +35,49 @@ func main() {
 	}
 
 	done := make(chan bool, 1)
-	metrics := make(chan *carbonMetric)
+
+	var metricChannels []chan *Metric
+
+	if viper.Get("writers.statsd.address") != nil &&
+		viper.Get("writers.statsd.port") != nil {
+		statsdMetrics := make(chan *Metric)
+		metricChannels = append(metricChannels, statsdMetrics)
+
+		var statsdTransforms []transform
+
+		if viper.Get("transforms.statsd") != nil {
+			viper.UnmarshalKey("transforms.statsd", &statsdTransforms)
+			statsdTransforms = compileTransforms(statsdTransforms)
+			fmt.Println(statsdTransforms)
+		}
+
+		go statsdWriter(
+			viper.GetString("writers.statsd.address"),
+			viper.GetInt("writers.statsd.port"),
+			done, statsdMetrics, statsdTransforms)
+	}
+
+	if viper.Get("writers.carbon.address") != nil &&
+		viper.Get("writers.carbon.port") != nil {
+		carbonMetrics := make(chan *Metric)
+		metricChannels = append(metricChannels, carbonMetrics)
+
+		go carbonWriter(
+			viper.GetString("writers.carbon.address"),
+			viper.GetInt("writers.carbon.port"),
+			done, carbonMetrics)
+	}
+
 	go carbonListener(
 		viper.GetString("listeners.carbon.address"),
 		viper.GetInt("listeners.carbon.port"),
-		done, metrics)
+		done, metricChannels)
 
 	// for status
 	go httpListener(
 		viper.GetString("listeners.http.address"),
 		viper.GetInt("listeners.http.port"),
 		done)
-
-	go statsdWriter(
-		viper.GetString("outputs.statsd.address"),
-		viper.GetInt("outputs.statsd.port"),
-		done, metrics)
 
 	<-done
 }

@@ -1,9 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"net"
 	"net/http"
+	"strconv"
 )
 
 func pingHandler(w http.ResponseWriter, r *http.Request) {
@@ -11,7 +12,7 @@ func pingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func httpListener(address string, port int, done chan bool) {
-	service := fmt.Sprintf("%s:%d", address, port)
+	service := net.JoinHostPort(address, strconv.Itoa(port))
 
 	http.HandleFunc("/_ping", pingHandler)
 	err := http.ListenAndServe(service, nil)

@@ -1,13 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"log"
+	"strconv"
 	"net"
 )
 
-func carbonListener(address string, port int, done chan bool, metrics chan *carbonMetric) {
-	service := fmt.Sprintf("%s:%d", address, port)
+func carbonListener(address string, port int, done chan bool, metrics []chan *Metric) {
+	service := net.JoinHostPort(address, strconv.Itoa(port))
 	log.Printf("Carbon listening on %s", service)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", service)
 	checkError(err)
