@@ -80,3 +80,16 @@ PONG
 ```
 
 A non-200 or missing PONG indicates the service is unavailable.
+
+### Building
+
+```
+# install deps
+go get
+
+# build it
+go build
+
+# run it (after writing your config!)
+./csproxy
+```
