@@ -31,7 +31,6 @@ Example from the log:
 
 ```
 2016/05/15 10:10:49 Received metric: path: collectd.host_example_net.interface-bridge0.if_octets.tx value: 0.000000 timestamp: 2016-05-15T10:10:49-04:00
-2016/05/15 10:10:49 Sending metric to carbon: collectd.host_example_net.interface-bridge0.if_octets.rx 0.000000 1463321449
 2016/05/15 10:10:49 Sending metrics to statsd: collectd.interface-bridge0.if_octets.tx:0.000000|g
 2016/05/15 10:10:49 Sending metric to carbon: collectd.host_example_net.interface-bridge0.if_octets.tx 0.000000 1463321449
 ```
