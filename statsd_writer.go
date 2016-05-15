@@ -21,7 +21,6 @@ func statsdWriter(address string, port int, done chan bool, metrics chan *Metric
 		emitMetrics := metric.ApplyTransforms(transforms)
 
 		for _, m := range emitMetrics {
-			log.Printf("Sending metrics to statsd: %s", m.Format("statsd"))
 			conn, err := net.DialUDP("udp4", nil, udpAddr)
 			if err != nil {
 				log.Printf("Error connecting to %s: %s", service, err.Error())
@@ -29,10 +28,17 @@ func statsdWriter(address string, port int, done chan bool, metrics chan *Metric
 			}
 
 			defer closeConnection(conn)
-			msg := fmt.Sprintf("%s\n", m.Format("statsd"))
-			conn.Write([]byte(msg))
+			sendStatsdMetric(conn, m)
+			sendStatsdMetric(conn, &Metric{path: "csproxy.statsd.sent", mtype: "c", value: 1})
+
 			closeConnection(conn)
 		}
 	}
 	done <- true
+}
+
+func sendStatsdMetric(conn net.Conn, metric *Metric) {
+	msg := fmt.Sprintf("%s\n", metric.Format("statsd"))
+	log.Printf("Sending metrics to statsd: %s", msg)
+	conn.Write([]byte(msg))
 }

@@ -15,6 +15,7 @@ type Metric struct {
 	path      string
 	value     float64
 	timestamp time.Time
+	mtype     string
 }
 
 // Format a Metric as:
@@ -24,7 +25,7 @@ type Metric struct {
 func (metric *Metric) Format(format string) string {
 	switch format {
 	case "statsd":
-		return fmt.Sprintf("%s:%f|g", metric.path, metric.value)
+		return fmt.Sprintf("%s:%f|%s", metric.path, metric.value, metric.mtype)
 	case "carbon":
 		return fmt.Sprintf("%s %f %d", metric.path, metric.value, metric.timestamp.Unix())
 	default:
@@ -64,7 +65,7 @@ func (metric *Metric) ApplyTransforms(transforms []transform) []*Metric {
 
 // Split a single metric passed in via the  Carbon plain text protocol
 // into it's path, value, and timestamp fields
-func parseMetric(msg string) (*Metric, error) {
+func parseCarbonMetric(msg string) (*Metric, error) {
 	metric_split := strings.Split(strings.TrimSpace(msg), " ")
 
 	if len(metric_split) < 3 {
@@ -76,7 +77,8 @@ func parseMetric(msg string) (*Metric, error) {
 	return &Metric{
 		path:      metric_split[0],
 		value:     value,
-		timestamp: time.Unix(timestamp_i, 0)}, nil
+		timestamp: time.Unix(timestamp_i, 0),
+		mtype:     "g"}, nil
 }
 
 func handleMetric(conn net.Conn, metrics []chan *Metric) {
@@ -91,7 +93,7 @@ func handleMetric(conn net.Conn, metrics []chan *Metric) {
 		}
 		log.Printf("Received message: %s\n", msg)
 
-		metric, err := parseMetric(msg)
+		metric, err := parseCarbonMetric(msg)
 		if err != nil {
 			log.Printf("%s - Error: %s", strings.Trim(msg, "\n"), err.Error())
 			return
