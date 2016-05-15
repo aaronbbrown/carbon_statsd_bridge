@@ -28,9 +28,10 @@ func statsdWriter(address string, port int, done chan bool, metrics chan *Metric
 				continue
 			}
 
-			defer conn.Close()
+			defer closeConnection(conn)
 			msg := fmt.Sprintf("%s\n", m.Format("statsd"))
 			conn.Write([]byte(msg))
+			closeConnection(conn)
 		}
 	}
 	done <- true
